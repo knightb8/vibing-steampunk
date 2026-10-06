@@ -90,7 +90,7 @@ These tools replace 11 granular read/write operations with intelligent parameter
 
 ---
 
-## Development Tools (10 tools)
+## Development Tools (9 tools)
 
 | Tool | Description | Mode |
 |------|-------------|------|
@@ -102,8 +102,18 @@ These tools replace 11 granular read/write operations with intelligent parameter
 | `CompareSource` | Unified diff between any two ABAP objects | Focused |
 | `CloneObject` | Copy PROG/CLAS/INTF to new name | Focused |
 | `GetClassInfo` | Quick class metadata (methods, attrs, interfaces) | Focused |
-| `CreateTable` | Create DDIC table from JSON definition | Focused |
 | `CreatePackage` | Create local package ($...) | Focused |
+
+---
+
+## DDIC Design Tools (4 tools)
+
+| Tool | Description | Mode |
+|------|-------------|------|
+| `CreateTable` | Create and activate a DDIC table from a JSON definition | Focused |
+| `CreateDomain` | Create and activate a DDIC domain, including optional fixed values | Expert |
+| `CreateDataElement` | Create and activate a DDIC data element based on a domain or predefined type | Expert |
+| `CreateStructure` | Create and activate a DDIC structure or append structure from DDL source | Expert |
 
 ---
 

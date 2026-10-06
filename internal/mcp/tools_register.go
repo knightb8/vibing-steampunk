@@ -91,6 +91,7 @@ func (s *Server) registerTools(mode string, disabledGroups string, toolsConfig m
 	s.registerSearchTools(shouldRegister)
 	s.registerDevTools(shouldRegister)
 	s.registerCRUDTools(shouldRegister)
+	s.registerDDICTools(shouldRegister)
 	s.registerClassIncludeTools(shouldRegister)
 	s.registerWorkflowTools(shouldRegister)
 	s.registerFileTools(shouldRegister)
