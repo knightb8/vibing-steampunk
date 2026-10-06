@@ -8,6 +8,7 @@ import (
 	"math"
 	"os"
 	"path/filepath"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -165,6 +166,7 @@ func init() {
 
 	// Mode options
 	rootCmd.Flags().StringVar(&cfg.Mode, "mode", "hyperfocused", "Tool mode: hyperfocused (single universal SAP tool), focused (98 tools), or expert (148 tools)")
+	rootCmd.Flags().StringVar(&cfg.ProfileName, "profile", "", "Named MCP tool profile (overrides configured defaults and mode)")
 	rootCmd.Flags().StringVar(&cfg.DisabledGroups, "disabled-groups", "", "Disable tool groups: 5/U=UI5, T=Tests, H=HANA, D=Debug, GC=gCTS, N=i18n")
 
 	// Transport options
@@ -248,6 +250,9 @@ func runServer(cmd *cobra.Command, args []string) error {
 	if err := validateConfig(); err != nil {
 		return err
 	}
+	if err := resolveMCPToolProfile(); err != nil {
+		return err
+	}
 
 	// Long-call budget of the MCP server: flag > SAP_CALL_TIMEOUT env
 	callTimeout, err := resolveCallTimeout(cmd)
@@ -292,7 +297,11 @@ func runServer(cmd *cobra.Command, args []string) error {
 
 	if cfg.Verbose {
 		fmt.Fprintf(os.Stderr, "[VERBOSE] Starting vsp server\n")
-		fmt.Fprintf(os.Stderr, "[VERBOSE] Mode: %s\n", cfg.Mode)
+		if cfg.ProfileName != "" {
+			fmt.Fprintf(os.Stderr, "[VERBOSE] MCP tool profile: %s\n", cfg.ProfileName)
+		} else {
+			fmt.Fprintf(os.Stderr, "[VERBOSE] Mode: %s\n", cfg.Mode)
+		}
 		if cfg.DisabledGroups != "" {
 			fmt.Fprintf(os.Stderr, "[VERBOSE] Disabled groups: %s (5/U=UI5, T=Tests, H=HANA, D=Debug)\n", cfg.DisabledGroups)
 		}
@@ -337,9 +346,10 @@ func runServer(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	// Load granular tool visibility and per-system settings from .vsp.json if present
+	// Load granular tool visibility and per-system settings from .vsp.json if present.
+	// A named profile completely replaces the legacy per-tool visibility map.
 	if systemsCfg, configPath, err := config.LoadSystems(); err == nil && systemsCfg != nil {
-		if systemsCfg.Tools != nil {
+		if systemsCfg.Tools != nil && cfg.ProfileName == "" {
 			cfg.ToolsConfig = systemsCfg.Tools
 			if cfg.Verbose {
 				enabled := 0
@@ -353,6 +363,8 @@ func runServer(cmd *cobra.Command, args []string) error {
 				}
 				fmt.Fprintf(os.Stderr, "[VERBOSE] Tool config loaded from %s: %d enabled, %d disabled\n", configPath, enabled, disabled)
 			}
+		} else if systemsCfg.Tools != nil && cfg.Verbose {
+			fmt.Fprintf(os.Stderr, "[VERBOSE] Ignoring tool map in %s; profile %q controls MCP visibility\n", configPath, cfg.ProfileName)
 		}
 
 		warnNamedSystemMismatch(os.Stderr, cfg, systemsCfg)
@@ -380,6 +392,51 @@ func runServer(cmd *cobra.Command, args []string) error {
 			return srv.ServeStdio()
 		}
 	})
+}
+
+// resolveMCPToolProfile resolves the CLI override and scoped TOML defaults
+// before any authentication flow can contact SAP.
+func resolveMCPToolProfile() error {
+	profiles, err := config.LoadToolProfiles()
+	if err != nil {
+		return err
+	}
+	name, tools, err := resolveMCPToolProfileFrom(cfg.ProfileName, profiles)
+	if err != nil {
+		return err
+	}
+	if name == "" {
+		return nil
+	}
+	cfg.ProfileName = name
+	cfg.ProfileTools = tools
+	return nil
+}
+
+func resolveMCPToolProfileFrom(explicit string, profiles *config.ToolProfiles) (string, map[string]bool, error) {
+	validated := make(map[string]map[string]bool)
+	if profiles != nil {
+		names := make([]string, 0, len(profiles.Profiles))
+		for name := range profiles.Profiles {
+			names = append(names, name)
+		}
+		sort.Strings(names)
+		for _, name := range names {
+			tools, err := mcp.ExpandToolProfile(profiles.Profiles[name])
+			if err != nil {
+				return "", nil, fmt.Errorf("invalid MCP tool profile %q: %w", name, err)
+			}
+			validated[name] = tools
+		}
+	}
+	name, _, found, err := profiles.Resolve(explicit)
+	if err != nil {
+		return "", nil, err
+	}
+	if !found {
+		return "", nil, nil
+	}
+	return name, validated[name], nil
 }
 
 // serveMCP runs the server once the command line is known to be good. From

@@ -1365,6 +1365,28 @@ All safety controls (`--read-only`, `--allowed-ops`, `--allowed-packages`) work 
 
 > *Thanks to [Filipp Gnilyak](https://github.com/nickel-f) for the hyperfocused mode concept.*
 
+### Named MCP Tool Profiles
+
+Profiles expose a named, role-specific subset of MCP tools. The example file
+[`docs/mcp-profiles.example.toml`](docs/mcp-profiles.example.toml) defines
+`transport-expert`, `code-scout`, and `code-documenter`.
+See the [quick guide](docs/mcp-profiles.md) for how to create, update, and select
+profiles.
+Copy it to `~/.vsp/profiles.toml` for global profiles or `.vsp/profiles.toml`
+for project profiles. Project definitions add to global profiles and replace
+a same-named global profile; project defaults override the global default.
+
+Use `--profile NAME` to select a profile for one server process. Otherwise,
+vsp uses the project default, then the global default; without either, the
+existing `--mode` behavior remains. A selected profile replaces mode-based
+visibility and the legacy `.vsp.json` `tools` map. It does not replace safety
+controls such as `--read-only`, `--allowed-ops`, or `--allowed-packages`.
+
+Profile `groups` are descriptive built-in sets; exact `tools` can be added and
+`exclude` removes tools after group expansion. `GetConnectionInfo`,
+`GetFeatures`, and `GetAbapHelp` are included by default unless excluded. The
+universal `SAP` router is opt-in.
+
 ### Context Compression — Built-in ABAP Understanding
 
 `GetSource` auto-appends a **compressed dependency prologue** — public API signatures of every referenced class, interface, and FM. One MCP call = source + full surrounding context.

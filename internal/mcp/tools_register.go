@@ -8,7 +8,8 @@ import (
 	"strings"
 )
 
-// registerTools registers ADT tools with the MCP server based on mode, disabled groups, and granular config.
+// registerTools registers ADT tools with the MCP server based on a selected
+// profile or, when absent, mode, disabled groups, and the legacy tool map.
 // Mode "focused" registers essential tools.
 // Mode "expert" registers all tools.
 // DisabledGroups can disable specific tool groups using short codes:
@@ -22,32 +23,43 @@ import (
 //   - "I" = Install tools (4 tools)
 //   - "X" = EXPERIMENTAL: All debugger + RunReport (17 tools) - use to disable unreliable features
 //
-// toolsConfig from .vsp.json has highest priority:
+// Without a named profile, toolsConfig from .vsp.json has highest priority:
 //   - If tool is explicitly disabled (false), it will NOT be registered
 //   - If tool is explicitly enabled (true), it WILL be registered (overrides focused mode)
 //   - If tool is not in config, mode/disabledGroups rules apply
 func (s *Server) registerTools(mode string, disabledGroups string, toolsConfig map[string]bool) {
+	// A resolved named profile replaces the mode and legacy per-tool map. The
+	// explicit disabled-groups flag remains an additional narrowing filter.
+	if s.config.ProfileName != "" {
+		disabledTools := disabledToolSet(disabledGroups)
+		shouldRegister := func(toolName string) bool {
+			return s.config.ProfileTools[toolName] && !disabledTools[toolName]
+		}
+		if shouldRegister("SAP") {
+			s.registerUniversalTool()
+		}
+		s.registerAllTools(shouldRegister)
+		return
+	}
+
 	// Hyperfocused mode: the universal tool, and nothing else.
 	if mode == "hyperfocused" {
 		s.registerUniversalTool()
 		return
 	}
 
-	groups := toolGroups()
 	focusedTools := focusedToolSet()
 
 	// Build set of disabled tools based on disabledGroups string
-	disabledTools := make(map[string]bool)
-	for _, code := range strings.ToUpper(disabledGroups) {
-		if tools, ok := groups[string(code)]; ok {
-			for _, tool := range tools {
-				disabledTools[tool] = true
-			}
-		}
-	}
+	disabledTools := disabledToolSet(disabledGroups)
 
 	// Helper to check if tool should be registered
 	shouldRegister := func(toolName string) bool {
+		// These utilities have historically been registered in focused and
+		// expert modes regardless of the legacy per-tool map.
+		if isProfileUtilityTool(toolName) {
+			return true
+		}
 		// Priority 1: Check granular tool config from .vsp.json (highest priority)
 		if toolsConfig != nil {
 			if enabled, exists := toolsConfig[toolName]; exists {
@@ -81,7 +93,23 @@ func (s *Server) registerTools(mode string, disabledGroups string, toolsConfig m
 		s.registerUniversalTool()
 	}
 
-	// Register all tools
+	s.registerAllTools(shouldRegister)
+}
+
+func disabledToolSet(disabledGroups string) map[string]bool {
+	groups := toolGroups()
+	disabledTools := make(map[string]bool)
+	for _, code := range strings.ToUpper(disabledGroups) {
+		if tools, ok := groups[string(code)]; ok {
+			for _, tool := range tools {
+				disabledTools[tool] = true
+			}
+		}
+	}
+	return disabledTools
+}
+
+func (s *Server) registerAllTools(shouldRegister func(string) bool) {
 	s.registerUnifiedTools(shouldRegister)
 	s.registerReadTools(shouldRegister)
 	s.registerSystemTools(shouldRegister)

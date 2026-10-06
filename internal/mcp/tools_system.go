@@ -20,27 +20,27 @@ func (s *Server) registerSystemTools(shouldRegister func(string) bool) {
 		), s.handleGetInstalledComponents)
 	}
 
-	// GetConnectionInfo - Self-inspection tool
-	// Always registered - useful for debugging and introspection
-	s.mcpServer.AddTool(mcp.NewTool("GetConnectionInfo",
-		mcp.WithDescription("Get current MCP connection info: user, URL, client. Useful for debugging and understanding current session context."),
-	), s.handleGetConnectionInfo)
+	if shouldRegister("GetConnectionInfo") {
+		s.mcpServer.AddTool(mcp.NewTool("GetConnectionInfo",
+			mcp.WithDescription("Get current MCP connection info: user, URL, client. Useful for debugging and understanding current session context."),
+		), s.handleGetConnectionInfo)
+	}
 
-	// GetFeatures - Feature Detection (Safety Network)
-	// Always registered - provides visibility into what's available
-	s.mcpServer.AddTool(mcp.NewTool("GetFeatures",
-		mcp.WithDescription("Probe SAP system for available features. Returns status of optional capabilities like abapGit, RAP/OData, AMDP debugging, UI5/BSP, and CTS transports. Use this to understand what features are available before attempting to use them."),
-	), s.handleGetFeatures)
+	if shouldRegister("GetFeatures") {
+		s.mcpServer.AddTool(mcp.NewTool("GetFeatures",
+			mcp.WithDescription("Probe SAP system for available features. Returns status of optional capabilities like abapGit, RAP/OData, AMDP debugging, UI5/BSP, and CTS transports. Use this to understand what features are available before attempting to use them."),
+		), s.handleGetFeatures)
+	}
 
-	// GetAbapHelp - ABAP Keyword Documentation
-	// Always registered - provides URL and search query, optionally real docs via ZADT_VSP
-	s.mcpServer.AddTool(mcp.NewTool("GetAbapHelp",
-		mcp.WithDescription("Get ABAP keyword documentation. Returns URL to SAP Help Portal and search query. If ZADT_VSP is installed, also returns real documentation from SAP system."),
-		mcp.WithString("keyword",
-			mcp.Required(),
-			mcp.Description("ABAP keyword (e.g., SELECT, LOOP, DATA, METHOD, READ TABLE)"),
-		),
-	), s.handleGetAbapHelp)
+	if shouldRegister("GetAbapHelp") {
+		s.mcpServer.AddTool(mcp.NewTool("GetAbapHelp",
+			mcp.WithDescription("Get ABAP keyword documentation. Returns URL to SAP Help Portal and search query. If ZADT_VSP is installed, also returns real documentation from SAP system."),
+			mcp.WithString("keyword",
+				mcp.Required(),
+				mcp.Description("ABAP keyword (e.g., SELECT, LOOP, DATA, METHOD, READ TABLE)"),
+			),
+		), s.handleGetAbapHelp)
+	}
 }
 
 // registerDiagnosticsTools registers runtime error, profiler, and SQL trace tools.

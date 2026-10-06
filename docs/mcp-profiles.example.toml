@@ -1,0 +1,31 @@
+# Copy to ~/.vsp/profiles.toml for global profiles or
+# .vsp/profiles.toml for project-specific profiles.
+# A project default overrides the global default; a same-named project profile
+# replaces the global definition. Omit default_profile to keep the existing
+# focused/expert/hyperfocused mode behavior.
+default_profile = "code-scout"
+
+# Groups expand to built-in tool sets. Exact tool names can be added with
+# `tools`; `exclude` removes tools after group expansion. The utility baseline
+# (GetConnectionInfo, GetFeatures, GetAbapHelp) is implicit unless excluded.
+
+[profiles.transport-expert]
+description = "Inspect and manage classic CTS requests."
+groups = ["transport_read", "transport_manage"]
+# transport_manage includes CreateTransport, ReleaseTransport, DeleteTransport.
+
+[profiles.code-scout]
+description = "Find and understand ABAP code without running tests or changing source."
+groups = ["source_read", "search", "code_intel", "static_analysis"]
+# RunUnitTests and RunATCCheck are intentionally not included.
+
+[profiles.code-documenter]
+description = "Inspect ABAP source and metadata to prepare accurate documentation."
+groups = ["source_read", "search", "code_intel", "documentation_read"]
+# Read-only: documentation is prepared outside SAP; no source-write tools.
+
+# Example of a one-off refinement:
+# [profiles.transport-auditor]
+# description = "Read transport requests, but do not expose the feature probe."
+# groups = ["transport_read"]
+# exclude = ["GetFeatures"]
