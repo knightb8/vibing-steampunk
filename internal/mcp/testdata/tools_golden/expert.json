@@ -832,6 +832,191 @@
         "idempotentHint": false,
         "openWorldHint": true
       },
+      "description": "Create and activate a DDIC data element using either a domain or a predefined type. Requires the normal create/package safety gates.",
+      "inputSchema": {
+        "properties": {
+          "change_document": {
+            "description": "Enable change document recording",
+            "type": "boolean"
+          },
+          "data_type": {
+            "description": "Predefined ABAP type; mutually exclusive with domain",
+            "type": "string"
+          },
+          "decimals": {
+            "description": "Decimal places for numeric predefined types",
+            "type": "number"
+          },
+          "description": {
+            "description": "Data element description",
+            "type": "string"
+          },
+          "domain": {
+            "description": "Existing domain name; mutually exclusive with data_type",
+            "type": "string"
+          },
+          "heading": {
+            "description": "Heading label (max 55 characters)",
+            "type": "string"
+          },
+          "language": {
+            "description": "Master language (defaults to the session language)",
+            "type": "string"
+          },
+          "length": {
+            "description": "Length for a predefined type",
+            "type": "number"
+          },
+          "long_label": {
+            "description": "Long field label (max 40 characters)",
+            "type": "string"
+          },
+          "medium_label": {
+            "description": "Medium field label (max 20 characters)",
+            "type": "string"
+          },
+          "name": {
+            "description": "Data element name (max 30 characters)",
+            "type": "string"
+          },
+          "package": {
+            "description": "Target package (defaults to $TMP)",
+            "type": "string"
+          },
+          "parameter_id": {
+            "description": "Optional SET/GET parameter ID",
+            "type": "string"
+          },
+          "search_help": {
+            "description": "Optional search help name",
+            "type": "string"
+          },
+          "short_label": {
+            "description": "Short field label (max 10 characters)",
+            "type": "string"
+          },
+          "transport": {
+            "description": "Transport request for a transportable package",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "description"
+        ],
+        "type": "object"
+      },
+      "name": "CreateDataElement"
+    },
+    "handler": "github.com/oisee/vibing-steampunk/internal/mcp.(*Server).handleCreateDataElement-fm"
+  },
+  {
+    "tool": {
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": true
+      },
+      "description": "Create and activate a DDIC domain. Requires the normal create/package safety gates.",
+      "inputSchema": {
+        "properties": {
+          "conversion_exit": {
+            "description": "Conversion exit name, without CONVERSION_EXIT_ prefix",
+            "type": "string"
+          },
+          "data_type": {
+            "description": "ABAP type, such as CHAR, NUMC, DEC, INT4, or DATS",
+            "type": "string"
+          },
+          "decimals": {
+            "description": "Decimal places for numeric types",
+            "type": "number"
+          },
+          "description": {
+            "description": "Domain description",
+            "type": "string"
+          },
+          "fixed_values": {
+            "description": "Optional fixed values: [{\"low\":\"A\",\"high\":\"\",\"text\":\"Alpha\"}]",
+            "items": {
+              "properties": {
+                "high": {
+                  "description": "Optional upper value",
+                  "type": "string"
+                },
+                "low": {
+                  "description": "Inclusive lower value",
+                  "type": "string"
+                },
+                "text": {
+                  "description": "Value description (max 60 characters)",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "low"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "language": {
+            "description": "Master language (defaults to the session language)",
+            "type": "string"
+          },
+          "length": {
+            "description": "Length; required for variable-length types",
+            "type": "number"
+          },
+          "lowercase": {
+            "description": "Allow lowercase characters",
+            "type": "boolean"
+          },
+          "name": {
+            "description": "Domain name (max 30 characters)",
+            "type": "string"
+          },
+          "output_length": {
+            "description": "Output length (defaults to length)",
+            "type": "number"
+          },
+          "package": {
+            "description": "Target package (defaults to $TMP)",
+            "type": "string"
+          },
+          "signed": {
+            "description": "Allow signed values",
+            "type": "boolean"
+          },
+          "transport": {
+            "description": "Transport request for a transportable package",
+            "type": "string"
+          },
+          "value_table": {
+            "description": "Optional check table name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "description",
+          "data_type"
+        ],
+        "type": "object"
+      },
+      "name": "CreateDomain"
+    },
+    "handler": "github.com/oisee/vibing-steampunk/internal/mcp.(*Server).handleCreateDomain-fm"
+  },
+  {
+    "tool": {
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": true
+      },
       "description": "Create an IAM app (ADT type SIA6), activate and publish it locally. Publishing a service binding does NOT create this object: it creates an IAM business service (SIA6 with appType IBS) plus a communication scenario, and neither can be put in a business catalog. This is the assignable app that goes in one. Use app_type EXT for an application served outside the system, such as a Fiori app on BTP Cloud Foundry. Until the app is published, the business catalog assignment does not see it, which reads as the app not existing.",
       "inputSchema": {
         "properties": {
@@ -997,6 +1182,52 @@
       "name": "CreatePackage"
     },
     "handler": "github.com/oisee/vibing-steampunk/internal/mcp.(*Server).handleCreatePackage-fm"
+  },
+  {
+    "tool": {
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false,
+        "openWorldHint": true
+      },
+      "description": "Create and activate a DDIC structure or append structure from DDL source. The structure name can be inferred from the source. Requires the normal create/package safety gates.",
+      "inputSchema": {
+        "properties": {
+          "description": {
+            "description": "Structure description",
+            "type": "string"
+          },
+          "language": {
+            "description": "Master language (defaults to the session language)",
+            "type": "string"
+          },
+          "name": {
+            "description": "Structure name; optional when declared in source",
+            "type": "string"
+          },
+          "package": {
+            "description": "Target package (defaults to $TMP)",
+            "type": "string"
+          },
+          "source": {
+            "description": "DDL source: define structure \u003cname\u003e { ... } or extend type \u003cbase\u003e with \u003cappend\u003e { ... }",
+            "type": "string"
+          },
+          "transport": {
+            "description": "Transport request for a transportable package",
+            "type": "string"
+          }
+        },
+        "required": [
+          "description",
+          "source"
+        ],
+        "type": "object"
+      },
+      "name": "CreateStructure"
+    },
+    "handler": "github.com/oisee/vibing-steampunk/internal/mcp.(*Server).handleCreateStructure-fm"
   },
   {
     "tool": {
