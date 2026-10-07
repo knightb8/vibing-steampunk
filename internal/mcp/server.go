@@ -166,10 +166,14 @@ type Config struct {
 	// HTTP address for Streamable HTTP transport (default: ":8080")
 	HTTPAddr string
 
-	// Granular tool visibility (from .vsp.json)
-	// Key: tool name, Value: true=enabled, false=disabled
-	// Takes highest priority over mode and disabled groups
+	// Granular legacy tool visibility (from .vsp.json), used when no named
+	// profile is selected. Key: tool name, Value: true=enabled, false=disabled.
 	ToolsConfig map[string]bool
+
+	// ProfileName and ProfileTools identify a validated named tool profile.
+	// When selected, the profile replaces mode and ToolsConfig visibility.
+	ProfileName  string
+	ProfileTools map[string]bool
 }
 
 // NewServer creates a new MCP server for ABAP ADT tools.
