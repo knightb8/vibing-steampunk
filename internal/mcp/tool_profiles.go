@@ -51,7 +51,7 @@ func profileToolGroups() map[string][]string {
 			"GetTable", "GetStructure", "GetTypeInfo", "GetCDSDependencies", "GetCDSImpactAnalysis", "GetCDSElementInfo",
 		},
 		"ddic_manage": {
-			"CreateTable",
+			"CreateTable", "CreateDomain", "CreateDataElement", "CreateStructure",
 		},
 		"data_read": {
 			"GetTableContents", "RunQuery",
