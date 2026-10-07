@@ -23,6 +23,16 @@ two worktrees, which is why it says so.
 > — the v2.55.0 sprint. Four defects that are one defect: the tool could not
 > answer, so it answered anyway. Ordered, with the test that proves each.
 
+## Follow-up — deduplicate the profile tool catalog
+
+- [ ] Refactor `internal/mcp/tool_profiles.go` so `ExpandToolProfile` and
+      `knownProfileTools` use one helper to build the known-tool set. They
+      currently repeat the walk over `profileToolGroups()` and add `SAP` and
+      utility tools separately. Keeping one construction path will prevent
+      profile validation and `TestProfileToolCatalogMatchesExpertRegistry`
+      from drifting apart. Follow-up to `feature/tool-profiles` commit
+      `6dc9c64`; preserve the existing profile behavior and tool membership.
+
 ## Open — 2026-09-14 — what `search` cannot see, and the filter that hides it
 
 Came out of a CLI design question — should every object type get a noun
